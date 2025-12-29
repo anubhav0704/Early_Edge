@@ -436,15 +436,16 @@ function initDashboard() {
     loadJobs();
     loadSquads();
     loadUserResults();
-    loadUserResume(); // ADD THIS LINE
+    
+    // Update profile view based on role
+    updateProfileView(); // Add this line
 
     if (State.currentUser.role === 'student') {
-        loadMyApplications();
         switchView('feed');
         document.getElementById('feed-heading').innerText = "Live Opportunities";
     } else if (State.currentUser.role === 'recruiter') {
-        switchView('recruiter');
-        document.getElementById('feed-heading').innerText = "My Posted Jobs";
+        switchView('feed');
+        document.getElementById('feed-heading').innerText = "Live Opportunities";
     }
 }
 
@@ -1024,8 +1025,11 @@ function switchView(viewId) {
     document.getElementById('mobile-overlay').style.display = 'none';
 
     if (viewId === 'squad') renderSquads();
-    if (viewId === 'analytics') loadRecruiterAnalytics(); // Load recruiter analytics
-    if (viewId === 'results') loadStudentAnalytics(); // Load student analytics
+    if (viewId === 'analytics') loadRecruiterAnalytics();
+    if (viewId === 'results') loadStudentAnalytics();
+    if (viewId === 'profile') updateProfileView(); // Add this line
+    
+    loadJobs();
 }
 
 // Load recruiter analytics
@@ -1420,6 +1424,93 @@ function initStudentAnalyticsChart() {
         .catch((error) => {
             console.error("Error loading analytics data:", error);
         });
+}
+
+// Function to update profile view based on user role
+function updateProfileView() {
+    const resumeSection = document.getElementById('resume-section');
+    const appliedJobsSection = document.getElementById('applied-jobs-section');
+    
+    if (!State.currentUser) return;
+    
+    if (State.currentUser.role === 'student') {
+        // Show resume and applied jobs for students
+        if (resumeSection) {
+            resumeSection.innerHTML = `
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-file-pdf"
+                        style="color:var(--primary)"></i> My Resume</h4>
+                
+                <div id="resume-status" style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px;">
+                    <div id="resume-message" style="color: var(--text-muted);">
+                        No resume uploaded yet.
+                    </div>
+                    <div id="resume-file-name" style="display: none; font-weight: bold; color: var(--primary);"></div>
+                    <div id="resume-upload-date" style="display: none; font-size: 0.8rem; color: var(--text-muted);"></div>
+                </div>
+                
+                <input type="file" id="resume-upload" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="document.getElementById('resume-upload').click()">
+                        <i class="fa-solid fa-upload"></i> Upload Resume
+                    </button>
+                    <button id="view-resume-btn" class="btn btn-glass" style="display: none;" onclick="viewMyResume()">
+                        <i class="fa-solid fa-eye"></i> View Resume
+                    </button>
+                    <button id="delete-resume-btn" class="btn btn-error" style="display: none;" onclick="deleteResume()">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                    Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)
+                </p>
+            `;
+            
+            // Re-attach event listener for resume upload
+            const resumeUpload = document.getElementById('resume-upload');
+            if (resumeUpload) {
+                resumeUpload.addEventListener('change', handleResumeUpload);
+            }
+        }
+        
+        if (appliedJobsSection) {
+            appliedJobsSection.innerHTML = `
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-briefcase"
+                        style="color:var(--primary)"></i> My Applied Jobs</h4>
+                <div id="profile-applications-list" class="history-list"
+                    style="max-height: 250px; overflow-y: auto;">
+                    <!-- Populated by JS -->
+                </div>
+            `;
+            
+            // Load applications for student
+            loadMyApplications();
+        }
+        
+        // Load user's resume data
+        loadUserResume();
+        
+    } else if (State.currentUser.role === 'recruiter') {
+        // Hide resume and applied jobs for recruiters
+        if (resumeSection) {
+            resumeSection.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-user-tie" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Resume upload is for job applicants only.</p>
+                    <p style="font-size: 0.9rem;">As a recruiter, you can view applicants' resumes in the job applications.</p>
+                </div>
+            `;
+        }
+        
+        if (appliedJobsSection) {
+            appliedJobsSection.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-briefcase" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Job applications will appear here when candidates apply to your posted jobs.</p>
+                    <p style="font-size: 0.9rem;">Check the "View Applicants" button on your job posts.</p>
+                </div>
+            `;
+        }
+    }
 }
 
 // Create student analytics chart
