@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarlyEdge | The Merit-First Hiring OS</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Specific Layout Tweaks for Index Only */
+        .hero {
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+        }
+        
+        .landing-nav {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 0;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        @media(max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 140px;
+            }
+            .hero-visual {
+                margin-top: 4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="landing-nav">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="sidebar-brand" style="margin:0; font-size: 1.5rem;">Early<span style="color: var(--primary)">Edge</span></div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                 <button class="btn btn-glass" onclick="toggleTheme()" style="padding: 0.6rem;">
+                    <i class="fa-solid fa-sun theme-icon-i"></i>
+                </button>
+                <a href="login.html" class="btn btn-primary" id="nav-login-btn">Log In</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero container">
+        <div style="flex: 1;">
+            <div style="display: inline-block; padding: 0.4rem 1rem; border: 1px solid var(--primary); border-radius: 30px; color: var(--primary); font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem;">
+                MVP LIVE DEMO
+            </div>
+            
+            <h1 class="hero-title">The <span style="color: var(--primary)">Fast Lane</span> for <br>Verified Talent.</h1>
+            
+            <p class="hero-subtitle">
+                Skip the "Resume Avalanche". Prove your skills, get Time-Locked early access to top startups, and get hired in days, not months.
+            </p>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;" id="hero-cta" class="hero-btns">
+                <a href="login.html" class="btn btn-primary">Take Test for Premium</a>
+                <button class="btn btn-glass" onclick="alert('Demo video coming soon!')"><i class="fa-solid fa-play"></i> Watch Demo</button>
+            </div>
+        </div>
+
+        <div class="hero-visual" style="flex: 1; display: flex; justify-content: center;">
+            <div class="glass-card"
+                style="width: 340px; padding: 2.5rem; border-color: var(--primary); box-shadow: 0 0 50px rgba(0, 243, 255, 0.15); transform: rotate(-2deg);">
+                <i class="fa-solid fa-lock"
+                    style="font-size: 3.5rem; color: var(--primary); display: block; margin-bottom: 1.5rem;"></i>
+                <div style="font-weight: bold; margin-bottom: 0.5rem; font-size: 1.3rem;">Senior React Dev</div>
+                <div style="color: var(--error); font-family: monospace; font-weight: bold; font-size: 1.1rem;">LOCKED: 09:42 remaining
+                </div>
+                <div style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.95rem;">
+                    Exclusive access for <span style="color: var(--text-main);">Verified Premium</span> members only.
+                </div>
+                <div style="height: 6px; background: #333; margin-top: 1.5rem; border-radius: 3px;">
+                    <div style="width: 60%; height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary);"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="container" style="padding: 6rem 0;">
+        <h2 style="text-align: center; margin-bottom: 4rem; font-size: 2.5rem;">Why EarlyEdge?</h2>
+        <div class="grid-cards">
+            <div class="glass-card">
+                <i class="fa-solid fa-bolt feature-icon"></i>
+                <h3>Time-Lock Access</h3>
+                <p style="color: var(--text-muted);">Jobs are visible ONLY to verified talent for the first 20 mins.
+                    Beat the 500+ applicants to the top of the pile.</p>
+            </div>
+            <div class="glass-card">
+                <i class="fa-solid fa-users feature-icon" style="color: var(--secondary);"></i>
+                <h3>Squad Hiring</h3>
+                <p style="color: var(--text-muted);">Don't join alone. Form a team (e.g., 1 Backend + 1 Frontend) and
+                    get hired as a complete unit.</p>
+            </div>
+            <div class="glass-card">
+                <i class="fa-solid fa-check-circle feature-icon" style="color: var(--success);"></i>
+                <h3>Merit First</h3>
+                <p style="color: var(--text-muted);">No resume filtering. Pass the skill test, get the "Verified" badge,
+                    and get noticed instantly.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="text-align: center; padding: 3rem; border-top: 1px solid var(--border); color: var(--text-muted); margin-top: 4rem;">
+        <p>&copy; 2025 EarlyEdge. The Merit-First Hiring OS.</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="script.js"></script>
+<script>
+    // Add this script to index.html to handle auth state
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check auth state immediately
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is logged in - update UI
+                const navBtn = document.getElementById('nav-login-btn');
+                const heroCta = document.getElementById('hero-cta');
+                
+                if (navBtn) {
+                    navBtn.innerText = "Go to Dashboard";
+                    navBtn.classList.remove('btn-glass');
+                    navBtn.classList.add('btn-primary');
+                    navBtn.href = "dashboard.html";
+                }
+                
+                if (heroCta) {
+                    // Get user name from Firestore or use email
+                    db.collection("users").doc(user.uid).get().then((doc) => {
+                        if (doc.exists) {
+                            const userData = doc.data();
+                            const userName = userData.name || user.email.split('@')[0];
+                            
+                            heroCta.innerHTML = `
+                                <a href="dashboard.html" class="btn btn-primary" style="padding: 0.8rem 1.5rem;">
+                                    <i class="fa-solid fa-arrow-right"></i> Welcome back, ${userName}
+                                </a>
+                                <button class="btn btn-glass" onclick="logoutFromLanding()">Log Out</button>
+                            `;
+                        }
+                    }).catch(() => {
+                        // Fallback if can't get user data
+                        heroCta.innerHTML = `
+                            <a href="dashboard.html" class="btn btn-primary" style="padding: 0.8rem 1.5rem;">
+                                <i class="fa-solid fa-arrow-right"></i> Go to Dashboard
+                            </a>
+                            <button class="btn btn-glass" onclick="logoutFromLanding()">Log Out</button>
+                        `;
+                    });
+                }
+            } else {
+                // User is logged out - show default UI
+                const navBtn = document.getElementById('nav-login-btn');
+                const heroCta = document.getElementById('hero-cta');
+                
+                if (navBtn) {
+                    navBtn.innerText = "Log In";
+                    navBtn.href = "login.html";
+                }
+                
+                if (heroCta) {
+                    heroCta.innerHTML = `
+                        <a href="login.html" class="btn btn-primary">Take Test for Premium</a>
+                        <button class="btn btn-glass" onclick="alert('Demo video coming soon!')">
+                            <i class="fa-solid fa-play"></i> Watch Demo
+                        </button>
+                    `;
+                }
+            }
+        });
+    });
+    
+    // Separate logout function for landing page
+    function logoutFromLanding() {
+        auth.signOut().then(() => {
+            location.reload();
+        }).catch((error) => {
+            console.error("Logout error:", error);
+            location.reload();
+        });
+    }
+</script>
+
+</body>
+</html>

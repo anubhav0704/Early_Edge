@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | EarlyEdge</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="app-loading"
+        style="position:fixed; inset:0; background:var(--bg-dark); z-index:9999; display:flex; justify-content:center; align-items:center;">
+        <div style="text-align:center;">
+            <i class="fa-solid fa-circle-notch fa-spin"
+                style="font-size:2rem; color:var(--primary); margin-bottom:1rem;"></i>
+            <p>Loading Dashboard...</p>
+        </div>
+    </div>
+
+    <div id="mobile-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:40; display:none;"
+        onclick="toggleMobileMenu()"></div>
+
+    <div class="app-layout">
+        <aside class="sidebar" id="app-sidebar">
+            <a href="index.html" class="sidebar-brand"><i class="fa-solid fa-layer-group"></i> Early<span
+                    style="color: var(--primary)">Edge</span></a>
+            <nav id="nav-container">
+                <a href="#" onclick="switchView('feed')" class="nav-item" id="nav-feed"><i class="fa-solid fa-bolt"></i>
+                    Live Feed</a>
+
+                <a href="#" onclick="switchView('squad')" class="nav-item role-student" id="nav-squad"
+                    style="display:none;"><i class="fa-solid fa-users"></i> Squad Market</a>
+                <a href="#" onclick="switchView('tests')" class="nav-item role-student" id="nav-tests"
+                    style="display:none;"><i class="fa-solid fa-code"></i> Mock Tests</a>
+                <a href="#" onclick="switchView('interviews')" class="nav-item role-student" id="nav-interviews"
+                    style="display:none;"><i class="fa-solid fa-video"></i> Interviews</a>
+
+                <a href="#" onclick="switchView('recruiter')" class="nav-item role-recruiter" id="nav-recruiter"
+                    style="display:none;"><i class="fa-solid fa-briefcase"></i> Post Job</a>
+                <a href="#" onclick="switchView('analytics')" class="nav-item role-recruiter" id="nav-analytics"
+                    style="display:none;"><i class="fa-solid fa-chart-pie"></i> Analytics</a>
+
+                <a href="#" onclick="switchView('profile')" class="nav-item" id="nav-profile"><i
+                        class="fa-solid fa-user-circle"></i> My Profile</a>
+
+
+                <a href="#" onclick="logout()" class="nav-item" style="color: var(--error); margin-top: 2rem;"><i
+                        class="fa-solid fa-right-from-bracket"></i> Log Out</a>
+            </nav>
+            <button class="btn btn-glass" style="margin-top: 2rem; width: 100%; display: none;" id="sidebar-close-btn"
+                onclick="toggleMobileMenu()">Close Menu</button>
+        </aside>
+
+        <main class="main-content">
+            <header class="app-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i
+                            class="fa-solid fa-bars"></i></button>
+                    <div>
+                        <h2 id="page-title">Dashboard</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Merit-First Hiring Ecosystem</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button class="btn btn-glass" onclick="toggleTheme()" style="padding: 0.6rem;">
+                        <i class="fa-solid fa-sun theme-icon-i"></i>
+                    </button>
+                    <div class="user-profile" style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-glass" id="premium-btn" onclick="openAssessment()">Take Test for
+                            Premium</button>
+                        <div style="text-align: right; display: none; padding-right: 10px;" class="desktop-only">
+                            <div id="user-name-display" style="font-weight: bold;">Loading...</div>
+                            <div id="user-role-display" style="font-size: 0.8rem; color: var(--text-muted);">...</div>
+                        </div>
+                        <div id="user-avatar" class="avatar"
+                            style="width: 35px; height: 35px; background: var(--secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            U</div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="view-feed" class="panel">
+                <div class="search-bar-container" style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                    <input type="text" class="form-input" id="job-search"
+                        placeholder="Search role, stack, or company..." oninput="renderFeed()">
+                    <select class="form-select" id="job-filter" style="width: 200px;" onchange="renderFeed()">
+                        <option value="Any">All Locations</option>
+                        <option value="Remote">Remote</option>
+                        <option value="Bengaluru">Bengaluru</option>
+                        <option value="Mumbai">Mumbai</option>
+                    </select>
+                </div>
+                <h3 id="feed-heading" style="margin-bottom: 1rem;">Live Opportunities</h3>
+                <div id="feed-container"></div>
+            </div>
+
+            <div id="view-squad" class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h3>Squad Market</h3>
+                    <button class="btn btn-primary" onclick="showCreateSquadModal()"><i class="fa-solid fa-plus"></i>
+                        Create Squad</button>
+                </div>
+                <div id="my-squad-status" style="margin-bottom: 2rem;"></div>
+                <div class="grid-cards" id="squad-container"></div>
+            </div>
+
+            <div id="view-tests" class="panel">
+                <h3 style="margin-bottom: 1.5rem;">Mock Skill Assessments</h3>
+                <div class="grid-cards">
+                    <div class="glass-card" style="border-top: 3px solid var(--primary);">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <h4>Full Stack</h4>
+                            <i class="fa-solid fa-code" style="color:var(--primary)"></i>
+                        </div>
+                        <p style="font-size: 0.85rem; color:var(--text-muted); margin: 0.5rem 0 1.5rem;">Web
+                            development, APIs, and Databases.</p>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="startMockTest('Full Stack')">Start
+                            Test</button>
+                    </div>
+
+                    <div class="glass-card" style="border-top: 3px solid var(--secondary);">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <h4>Machine Learning</h4>
+                            <i class="fa-solid fa-brain" style="color:var(--secondary)"></i>
+                        </div>
+                        <p style="font-size: 0.85rem; color:var(--text-muted); margin: 0.5rem 0 1.5rem;">Algorithms,
+                            Models, and Neural Networks.</p>
+                        <button class="btn btn-primary" style="width: 100%;"
+                            onclick="startMockTest('Machine Learning')">Start Test</button>
+                    </div>
+
+                    <div class="glass-card" style="border-top: 3px solid var(--success);">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <h4>Data Science</h4>
+                            <i class="fa-solid fa-chart-line" style="color:var(--success)"></i>
+                        </div>
+                        <p style="font-size: 0.85rem; color:var(--text-muted); margin: 0.5rem 0 1.5rem;">Data analysis,
+                            Statistics, and Visualization.</p>
+                        <button class="btn btn-primary" style="width: 100%;"
+                            onclick="startMockTest('Data Science')">Start Test</button>
+                    </div>
+
+                    <div class="glass-card" style="border-top: 3px solid var(--error);">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <h4>Software Testing</h4>
+                            <i class="fa-solid fa-bug-slash" style="color:var(--error)"></i>
+                        </div>
+                        <p style="font-size: 0.85rem; color:var(--text-muted); margin: 0.5rem 0 1.5rem;">QA, Automation,
+                            and Manual Testing.</p>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="startMockTest('Testing')">Start
+                            Test</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-interviews" class="panel" style="position: relative;">
+                <button onclick="exitInterview()"
+                    style="position:absolute; top:0; right:0; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.8rem; z-index:100;"
+                    title="Exit Interview">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <button class="btn btn-glass" onclick="clearInterviewHistory()" style="margin-top: 1rem; font-size: 0.8rem;">
+                    <i class="fa-solid fa-rotate-left"></i> Clear Interview History
+                </button>
+
+                <script>
+                function debugInterview() {
+                    console.log("=== INTERVIEW DEBUG INFO ===");
+                    console.log("Interview Active:", interviewActive);
+                    console.log("Processing:", isAIProcessing);
+                    console.log("Awaiting Response:", awaitingUserResponse);
+                    console.log("User Interests:", userInterests);
+                    console.log("Chat History:", chatHistory);
+                    console.log("Asked Questions:", askedQuestions);
+                    console.log("Recognition:", recognition ? "Active" : "Inactive");
+                    console.log("Speech Synthesis:", window.speechSynthesis ? "Available" : "Unavailable");
+                    console.log("==========================");
+                    
+                    // Check if we can manually trigger next step
+                    if (interviewActive && awaitingUserResponse) {
+                        console.log("Manually processing default response...");
+                        if (userInterests.length === 0) {
+                            processUserInterests("Web development with JavaScript and React");
+                        } else {
+                            askNextQuestion();
+                        }
+                    }
+                }
+                </script>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h3>AI Technical Interviewer</h3>
+                </div>
+
+                <div id="interview-container" class="glass-card"
+                    style="max-width: 800px; margin: 0 auto; text-align: center; padding: 2rem;">
+                    
+                    <!-- AI Avatar/Status Display -->
+                    <div id="interview-screen"
+                        style="height: 200px; background: var(--bg-card); border-radius: 12px; margin-bottom: 2rem; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px solid var(--border);">
+                        <i class="fa-solid fa-robot" id="ai-icon"
+                            style="font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                        <p id="ai-status" style="color: var(--primary); font-weight: bold; font-size: 1.1rem;">SYSTEM READY</p>
+                    </div>
+
+                    <!-- UPDATED: Status Display -->
+                    <div id="interview-status-display" class="interview-status status-listening" style="display: none; margin-bottom: 1rem;">
+                        <i class="fa-solid fa-microphone"></i> <span id="status-text">Ready to listen</span>
+                    </div>
+
+                    <!-- UPDATED: Transcript Area -->
+                    <div id="ai-transcript"
+                        style="height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left; font-size: 0.95rem; color: var(--text-muted); border: 1px solid var(--border);">
+                        <div class="transcript-line transcript-interviewer">
+                            <strong style="color:var(--primary)">AI:</strong> Click "Start Interview" to begin.
+                        </div>
+                    </div>
+
+                    <!-- UPDATED: Control Buttons -->
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" id="start-ai-btn" onclick="startAIInterview()">
+                            <i class="fa-solid fa-play"></i> Start Interview
+                        </button>
+                        <button class="btn btn-glass" id="download-pdf-btn" onclick="downloadInterviewPDF()"
+                            style="display:none;">
+                            <i class="fa-solid fa-file-pdf"></i> Download Report
+                        </button>
+                        <button class="btn btn-glass" id="mic-btn" onclick="manualStopRecognition()"
+                            style="display:none; border-color: var(--primary); color: var(--primary);">
+                            <i class="fa-solid fa-check"></i> Finish Speaking
+                        </button>
+                    </div>
+                </div>
+
+                <!-- The feedback/results card (Keep this as is) -->
+                <div id="interview-result-card" style="display:none; max-width: 800px; margin: 2rem auto;"
+                    class="glass-card">
+                    <h4><i class="fa-solid fa-medal" style="color:var(--secondary)"></i> Performance Feedback</h4>
+                    <div class="grid-cards"
+                        style="margin-top:1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="text-align:center; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px;">
+                            <div id="score-tech" style="font-size:1.5rem; color:var(--primary); font-weight: bold;">0/10
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">Technical Score</div>
+                        </div>
+                        <div style="text-align:center; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px;">
+                            <div id="score-comm" style="font-size:1.5rem; color:var(--secondary); font-weight: bold;">
+                                0/10</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">Communication Score</div>
+                        </div>
+                    </div>
+                    <div id="ai-feedback-text"
+                        style="margin-top:1.5rem; font-size:0.95rem; border-top:1px solid var(--border); padding-top:1rem; line-height: 1.6; white-space: pre-line;">
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;"
+                        onclick="location.reload()">Take Another Interview</button>
+                </div>
+            </div>
+            <!-- Update this section -->
+            <div class="panel" id="view-results">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h3 id="results-title">Performance Analytics</h3>
+                    <div
+                        style="background: var(--bg-card); padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border); display: flex; gap: 0.5rem;">
+                        <button class="btn-tab active" onclick="switchResultTab('mocks')">Mock Tests</button>
+                        <button class="btn-tab" onclick="switchResultTab('interviews')">Interviews</button>
+                        <button class="btn-tab" onclick="switchResultTab('verification')">Verification</button>
+                    </div>
+                </div>
+
+                <!-- ANALYTICS CHARTS SECTION - SHOW FOR STUDENTS ONLY -->
+                <div id="student-analytics-charts" class="glass-card" style="margin-bottom: 2rem; padding: 1.5rem;">
+                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-chart-line"
+                            style="color: var(--primary);"></i> Your Progress Overview</h4>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: MOCK TESTS -->
+                <div id="tab-mocks" class="result-tab-content active">
+                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-list-check"></i> Recent Mock Tests</h4>
+                    <div id="mock-history-list" class="history-list">
+                        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading history...</p>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: INTERVIEWS -->
+                <div id="tab-interviews" class="result-tab-content" style="display: none;">
+                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-microphone"></i> Interview Sessions</h4>
+                    <div id="interview-history-list" class="history-list">
+                        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading history...</p>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: VERIFICATION -->
+                <div id="tab-verification" class="result-tab-content" style="display: none;">
+                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-certificate"></i> Premium Validations</h4>
+                    <div id="verification-history-list" class="history-list">
+                        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading history...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAILED RESULT MODAL -->
+            <div class="modal-overlay" id="result-detail-modal">
+                <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                    <button onclick="closeModal('result-detail-modal')"
+                        style="position:absolute; top:1.5rem; right:1.5rem; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.5rem;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <div id="result-modal-content">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-recruiter" class="panel">
+                <h3>Post a Job</h3>
+                <div class="glass-card" style="max-width: 600px;">
+                    <div class="form-group"><label class="form-label">Job Title</label><input type="text"
+                            id="post-title" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Company</label><input type="text"
+                            id="post-company" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Location</label><input type="text"
+                            id="post-location" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Type</label><select id="post-type"
+                            class="form-select">
+                            <option value="individual">Individual</option>
+                            <option value="squad">Squad</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Requirements (Enter each requirement on a new line)</label>
+                        <textarea id="post-requirements" class="form-input" rows="6"
+                            placeholder="Example:
+                3+ years experience with React.js
+                Strong understanding of JavaScript ES6+
+                Experience with Firebase or similar backend
+                Good communication skills
+                Bachelor's degree in Computer Science or related field"></textarea>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                            Each line will become a bullet point. Use clear, concise requirements.
+                        </div>
+                    </div>
+
+
+                    <button class="btn btn-primary" onclick="postJob()" style="width: 100%;">Post Opportunity</button>
+                </div>
+            </div>
+
+            <div id="view-analytics" class="panel">
+                <h3>Platform Analytics</h3>
+                <div class="grid-cards" style="margin-top: 1.5rem;">
+                    <div class="glass-card" style="text-align: center;">
+                        <div style="font-size: 3rem; color: var(--primary);" id="stat-jobs">0</div>
+                        <div>Active Jobs</div>
+                    </div>
+                    <div class="glass-card" style="text-align: center;">
+                        <div style="font-size: 3rem; color: var(--success);">100%</div>
+                        <div>Verified Talent</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add this in the view-profile panel, after the save changes button -->
+        <div id="view-profile" class="panel">
+            <h3>My Profile</h3>
+            <div class="glass-card" style="max-width: 600px; margin-top: 1.5rem;">
+                <div class="form-group"><label class="form-label">Full Name</label><input type="text"
+                        id="profile-name" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Email</label><input type="email"
+                        id="profile-email" class="form-input"></div>
+                <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+
+                <!-- ADD RESUME UPLOAD SECTION HERE -->
+                <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-file-pdf"
+                            style="color:var(--primary)"></i> My Resume</h4>
+                    
+                    <div id="resume-status" style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px;">
+                        <div id="resume-message" style="color: var(--text-muted);">
+                            No resume uploaded yet.
+                        </div>
+                        <div id="resume-file-name" style="display: none; font-weight: bold; color: var(--primary);"></div>
+                        <div id="resume-upload-date" style="display: none; font-size: 0.8rem; color: var(--text-muted);"></div>
+                    </div>
+                    
+                    <input type="file" id="resume-upload" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" onclick="document.getElementById('resume-upload').click()">
+                            <i class="fa-solid fa-upload"></i> Upload Resume
+                        </button>
+                        <button id="view-resume-btn" class="btn btn-glass" style="display: none;" onclick="viewMyResume()">
+                            <i class="fa-solid fa-eye"></i> View Resume
+                        </button>
+                        <button id="delete-resume-btn" class="btn btn-error" style="display: none;" onclick="deleteResume()">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                        Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)
+                    </p>
+                </div>
+                <!-- END RESUME UPLOAD SECTION -->
+
+                <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-briefcase"
+                            style="color:var(--primary)"></i> My Applied Jobs</h4>
+                    <div id="profile-applications-list" class="history-list"
+                        style="max-height: 250px; overflow-y: auto;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+
+
+
+    <div class="modal-overlay" id="assessment-modal">
+        <div class="modal-content">
+            <h3 id="modal-main-title" style="text-align: center; margin-bottom: 1rem;">Get Verified Premium</h3>
+
+            <div id="quiz-step-1">
+            </div>
+
+            <div id="quiz-results" style="display: none; padding: 1rem; position: relative;">
+                <button onclick="location.reload()"
+                    style="position:absolute; top:-10px; right:-10px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.8rem; z-index:100;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <i class="fa-solid fa-square-poll-vertical"
+                        style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                    <h3 id="result-test-name" style="margin-bottom: 0.5rem;">Test Results</h3>
+                    <div id="result-score-big" style="font-size: 3.5rem; font-weight: bold; color: var(--text-main);">
+                        0/30</div>
+                    <p id="result-percentage" style="color: var(--text-muted); font-weight: 500;"></p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <div class="glass-card"
+                        style="text-align: center; padding: 1rem; border-bottom: 3px solid var(--secondary);">
+                        <div id="score-aptitude" style="font-size: 1.2rem; font-weight: bold;">0/20</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Aptitude</div>
+                    </div>
+                    <div class="glass-card"
+                        style="text-align: center; padding: 1rem; border-bottom: 3px solid var(--success);">
+                        <div id="score-technical" style="font-size: 1.2rem; font-weight: bold;">0/10</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Technical</div>
+                    </div>
+                </div>
+
+                <div id="question-feedback-list"
+                    style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border-radius: 8px; background: rgba(0,0,0,0.2); padding: 1rem;">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="location.reload()">Finish &
+                    Return</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="applicants-modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <button onclick="closeModal('applicants-modal')"
+                style="position:absolute; top:1.5rem; right:1.5rem; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.5rem;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <h3 id="applicants-modal-title" style="margin-bottom: 1.5rem;">Applicants</h3>
+            
+            <div id="applicants-list">
+                <!-- Applicants will be loaded here -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-glass" onclick="closeModal('applicants-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="script.js"></script>
+    
+</body>
+
+</html>

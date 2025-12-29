@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In | EarlyEdge</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* CHANGED TO VARIABLE FOR THEME SUPPORT */
+            background: var(--login-bg);
+        }
+        .login-container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+        }
+        .login-option {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-option:hover { transform: translateY(-5px); }
+        .card-student:hover { border-color: var(--primary); box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); }
+        .card-recruiter:hover { border-color: var(--secondary); box-shadow: 0 0 30px rgba(139, 92, 246, 0.1); }
+        .auth-form {
+            display: none;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .back-btn {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        /* NEW: THEME TOGGLE POSITIONING */
+        .theme-toggle-login {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+        }
+        .toggle-auth {
+            text-align: center; 
+            margin-top: 1.5rem; 
+            color: var(--text-muted); 
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .toggle-auth span { text-decoration: underline; color: var(--text-main); }
+        @media (max-width: 768px) { .login-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+
+    <div class="theme-toggle-login">
+        <button class="btn btn-glass" onclick="toggleTheme()" style="padding: 0.5rem 0.8rem;">
+            <i class="fa-solid fa-sun theme-icon-i"></i>
+        </button>
+    </div>
+
+    <div class="login-container" id="selection-phase">
+        <div class="glass-card login-option card-student" onclick="showForm('student')">
+            <div style="height: 60px; width: 60px; background: rgba(0, 243, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-user-graduate" style="font-size: 1.8rem; color: var(--primary);"></i>
+            </div>
+            <h2 style="margin-bottom: 0.5rem;">Student / Talent</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Log in to take skill tests, join squads, and unlock Time-Gated jobs.</p>
+        </div>
+
+        <div class="glass-card login-option card-recruiter" onclick="showForm('recruiter')">
+            <div style="height: 60px; width: 60px; background: rgba(139, 92, 246, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-building-user" style="font-size: 1.8rem; color: var(--secondary);"></i>
+            </div>
+            <h2 style="margin-bottom: 0.5rem;">Recruiter / Company</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Log in to post jobs, view "Merit Lists", and hire squads.</p>
+        </div>
+    </div>
+
+    <div id="student-form" class="auth-form glass-card" style="border-top: 4px solid var(--primary);">
+        <h2 id="std-title" style="text-align: center; margin-bottom: 2rem;">Student Login</h2>
+        <div class="form-group" id="std-name-group" style="display:none;">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="std-name" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+            <label class="form-label">College Email ID</label>
+            <input type="email" class="form-input" id="std-email" placeholder="student@university.edu">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="std-pass" placeholder="••••••••">
+        </div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="handleAuth('student')" id="std-btn">Log In</button>
+        <div class="toggle-auth" onclick="toggleMode('student')">
+            <div id="std-toggle-text">New here? <span>Create an account</span></div>
+        </div>
+        <div style="text-align: center; margin-top: 1rem;">
+             <a href="#" onclick="resetSelection()" style="color: var(--text-muted); font-size: 0.8rem;">Switch Role</a>
+        </div>
+    </div>
+
+    <div id="recruiter-form" class="auth-form glass-card" style="border-top: 4px solid var(--secondary);">
+        <h2 id="rec-title" style="text-align: center; margin-bottom: 2rem;">Recruiter Login</h2>
+        <div class="form-group" id="rec-name-group" style="display:none;">
+             <label class="form-label">Full Name</label>
+             <input type="text" class="form-input" id="rec-name" placeholder="HR Name">
+         </div>
+         <div class="form-group">
+             <label class="form-label">Work Email</label>
+             <input type="email" class="form-input" id="rec-email" placeholder="hr@company.com">
+         </div>
+         <div class="form-group" id="rec-company-group" style="display:none;">
+             <label class="form-label">Company Name</label>
+             <input type="text" class="form-input" id="rec-company" placeholder="e.g. Swiggy">
+         </div>
+         <div class="form-group">
+             <label class="form-label">Password</label>
+             <input type="password" class="form-input" id="rec-pass" placeholder="••••••••">
+         </div>
+         <button class="btn btn-primary" style="width: 100%; background: var(--secondary); margin-top: 1rem; border: none; color: white;" onclick="handleAuth('recruiter')" id="rec-btn">Log In</button>
+         <div class="toggle-auth" onclick="toggleMode('recruiter')">
+            <div id="rec-toggle-text">New here? <span>Create an account</span></div>
+        </div>
+         <div style="text-align: center; margin-top: 1rem;">
+             <a href="#" onclick="resetSelection()" style="color: var(--text-muted); font-size: 0.8rem;">Switch Role</a>
+         </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let isSignup = false;
+
+        function showForm(type) {
+            document.getElementById('selection-phase').style.display = 'none';
+            if (type === 'student') document.getElementById('student-form').style.display = 'block';
+            else document.getElementById('recruiter-form').style.display = 'block';
+        }
+
+        function resetSelection() {
+            document.getElementById('student-form').style.display = 'none';
+            document.getElementById('recruiter-form').style.display = 'none';
+            document.getElementById('selection-phase').style.display = 'grid';
+            isSignup = false;
+            updateUI();
+        }
+
+        function toggleMode(role) {
+            isSignup = !isSignup;
+            updateUI(role);
+        }
+
+        function updateUI(role) {
+            const sName = document.getElementById('std-name-group');
+            const sBtn = document.getElementById('std-btn');
+            const sTitle = document.getElementById('std-title');
+            const sToggle = document.getElementById('std-toggle-text');
+
+            const rName = document.getElementById('rec-name-group');
+            const rComp = document.getElementById('rec-company-group');
+            const rBtn = document.getElementById('rec-btn');
+            const rTitle = document.getElementById('rec-title');
+            const rToggle = document.getElementById('rec-toggle-text');
+
+            if(isSignup) {
+                sName.style.display = 'block';
+                sBtn.innerText = 'Create Account';
+                sTitle.innerText = 'Student Sign Up';
+                sToggle.innerHTML = 'Already have an account? <span>Log In</span>';
+
+                rName.style.display = 'block';
+                rComp.style.display = 'block';
+                rBtn.innerText = 'Create Account';
+                rTitle.innerText = 'Recruiter Sign Up';
+                rToggle.innerHTML = 'Already have an account? <span>Log In</span>';
+            } else {
+                sName.style.display = 'none';
+                sBtn.innerText = 'Log In';
+                sTitle.innerText = 'Student Login';
+                sToggle.innerHTML = 'New here? <span>Create an account</span>';
+
+                rName.style.display = 'none';
+                rComp.style.display = 'none';
+                rBtn.innerText = 'Log In';
+                rTitle.innerText = 'Recruiter Login';
+                rToggle.innerHTML = 'New here? <span>Create an account</span>';
+            }
+        }
+
+        function handleAuth(role) {
+            const email = role === 'student' ? document.getElementById('std-email').value : document.getElementById('rec-email').value;
+            const pass = role === 'student' ? document.getElementById('std-pass').value : document.getElementById('rec-pass').value;
+            let name = '', company = '';
+            
+            if(isSignup) {
+                name = role === 'student' ? document.getElementById('std-name').value : document.getElementById('rec-name').value;
+                if(role === 'recruiter') company = document.getElementById('rec-company').value;
+                
+                if(!name || !email || !pass) return alert("Please fill all fields");
+                authSignUp(email, pass, role, name, company);
+            } else {
+                if(!email || !pass) return alert("Please enter credentials");
+                authLogin(email, pass);
+            }
+        }
+    </script>
+</body>
+</html>
