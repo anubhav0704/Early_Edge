@@ -383,44 +383,14 @@
                         id="profile-email" class="form-input"></div>
                 <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
 
-                <!-- ADD RESUME UPLOAD SECTION HERE -->
-                <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-file-pdf"
-                            style="color:var(--primary)"></i> My Resume</h4>
-                    
-                    <div id="resume-status" style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px;">
-                        <div id="resume-message" style="color: var(--text-muted);">
-                            No resume uploaded yet.
-                        </div>
-                        <div id="resume-file-name" style="display: none; font-weight: bold; color: var(--primary);"></div>
-                        <div id="resume-upload-date" style="display: none; font-size: 0.8rem; color: var(--text-muted);"></div>
-                    </div>
-                    
-                    <input type="file" id="resume-upload" accept=".pdf,.doc,.docx,.txt" style="display: none;">
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn btn-primary" onclick="document.getElementById('resume-upload').click()">
-                            <i class="fa-solid fa-upload"></i> Upload Resume
-                        </button>
-                        <button id="view-resume-btn" class="btn btn-glass" style="display: none;" onclick="viewMyResume()">
-                            <i class="fa-solid fa-eye"></i> View Resume
-                        </button>
-                        <button id="delete-resume-btn" class="btn btn-error" style="display: none;" onclick="deleteResume()">
-                            <i class="fa-solid fa-trash"></i> Delete
-                        </button>
-                    </div>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
-                        Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)
-                    </p>
+                <!-- RESUME UPLOAD SECTION - ONLY FOR STUDENTS -->
+                <div id="resume-section" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <!-- This section will be shown/hidden by JavaScript -->
                 </div>
-                <!-- END RESUME UPLOAD SECTION -->
 
-                <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-                    <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-briefcase"
-                            style="color:var(--primary)"></i> My Applied Jobs</h4>
-                    <div id="profile-applications-list" class="history-list"
-                        style="max-height: 250px; overflow-y: auto;">
-                        <!-- Populated by JS -->
-                    </div>
+                <!-- APPLIED JOBS SECTION - ONLY FOR STUDENTS -->
+                <div id="applied-jobs-section" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <!-- This section will be shown/hidden by JavaScript -->
                 </div>
             </div>
         </div>
